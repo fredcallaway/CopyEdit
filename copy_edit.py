@@ -50,18 +50,21 @@ class CutEditCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		self.view.run_command("copy_edit", {"verb":"Cut"})
 		for s in reversed(self.view.sel()):
-			self.view.erase(edit, s)
+			if s.empty():
+				# cut the whole line of empty sel as is default behavior
+				self.view.erase(edit, self.view.full_line(s))
+			else:
+				self.view.erase(edit, s)
 
 class PasteEditCommand(sublime_plugin.TextCommand):
-	def run(self, edit):
-		
+	def run(self, edit, seperator=''):
 		#check if clipboard is more up to date
 		pasteboard = sublime.get_clipboard()
 		from_clipboard = False
 		if pasteboard != '\n'.join(selection_strings):
 			selection_strings[:] = [] #.clear() doesn't exist in 2.7
 			selection_strings.append(pasteboard)
-			from_clipboard = True #what should be done in this case?
+			from_clipboard = True
 		
 		numstrings = len(selection_strings)
 		numsels = len(self.view.sel())
@@ -75,15 +78,22 @@ class PasteEditCommand(sublime_plugin.TextCommand):
 		else:
 			strs_per_sel = numstrings
 		
-		str_index = 0
+		str_index = 0 
 		new_sels = []
 		for sel in self.view.sel():
 			self.view.erase(edit, sel)
 			insertion_point = sel.begin()
-			for string in selection_strings[str_index:str_index+strs_per_sel]:
+			strings_to_paste = selection_strings[str_index:str_index+strs_per_sel]
+			for i, string in enumerate(strings_to_paste):
+				separating = (i != len(strings_to_paste) - 1 and seperator)
+				if separating:
+					string += seperator
 				self.view.insert(edit, insertion_point, string)
 				insertion_point += len(string)
-				region = sublime.Region(insertion_point)
+				if separating:
+					region = sublime.Region(insertion_point - len(seperator))
+				else:
+					region = sublime.Region(insertion_point)
 				new_sels.append(region)
 			str_index = (str_index + strs_per_sel) % numstrings
 		
@@ -92,3 +102,15 @@ class PasteEditCommand(sublime_plugin.TextCommand):
 		self.view.sel().clear()
 		for s in new_sels:
 			self.view.sel().add(s)
+
+class PasteEditSeperatorCommand(sublime_plugin.WindowCommand):
+	def run(self):
+		self.window.show_input_panel(
+			  'Paste with seperator:', ', ', self.on_done, None, None, )
+
+	def on_done(self, seperator):
+		if self.window.active_view():
+			pass
+			self.window.active_view().run_command("paste_edit", {"seperator": seperator})
+
+
