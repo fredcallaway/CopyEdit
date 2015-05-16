@@ -12,6 +12,8 @@ you run out? Done and done!
 Ever wanted to paste six items to three selections, two per? We've got
 that too!
 
+Ever wanted to paste a list of items with a custom seperator? Look no further!
+
 # Installation
 
  - Install [Package Control](http://wbond.net/sublime_packages/package_control/installation).
