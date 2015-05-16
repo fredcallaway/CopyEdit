@@ -64,7 +64,7 @@ class PasteEditCommand(sublime_plugin.TextCommand):
 		if pasteboard != '\n'.join(selection_strings):
 			selection_strings[:] = [] #.clear() doesn't exist in 2.7
 			selection_strings.append(pasteboard)
-			from_clipboard = True
+			from_clipboard = True #what should be done in this case?
 		
 		numstrings = len(selection_strings)
 		numsels = len(self.view.sel())
@@ -78,7 +78,7 @@ class PasteEditCommand(sublime_plugin.TextCommand):
 		else:
 			strs_per_sel = numstrings
 		
-		str_index = 0 
+		str_index = 0
 		new_sels = []
 		for sel in self.view.sel():
 			self.view.erase(edit, sel)
